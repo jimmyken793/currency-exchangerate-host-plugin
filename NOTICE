@@ -1,0 +1,16 @@
+Currency Exchange Rate Host Plugin
+
+This package contains code derived from the InvenTree project's built-in
+currency exchange plugin and from the InvenTree Plugin Creator scaffold.
+
+InvenTree is distributed under the MIT License:
+
+  Copyright (c) 2017 - InvenTree Developers
+  https://github.com/inventree/InvenTree
+
+Local modifications:
+
+  Copyright (c) 2025 Jimmy Cheng <jimmy@kingyoung.com.tw>
+
+The historical package name and plugin slug intentionally retain their original
+spelling to preserve compatibility with an existing InvenTree database.

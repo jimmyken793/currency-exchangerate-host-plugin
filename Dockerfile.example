@@ -1,0 +1,4 @@
+FROM inventree/inventree:1.1.11
+
+RUN pip install \
+  "git+https://github.com/jimmyken793/currency-exchangerate-host-plugin.git@v0.1.0"
