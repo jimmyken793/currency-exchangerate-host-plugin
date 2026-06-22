@@ -1,6 +1,6 @@
 # Currency Exchange Rate Host Plugin
 
-InvenTree plugin for fetching exchange rates from exchangerate.host.
+InvenTree plugin for fetching exchange rates from Frankfurter v2.
 
 This repository keeps the historical Python package name and plugin slug used by the
 current King Young InvenTree installation:
@@ -20,23 +20,23 @@ InvenTree database is migrated at the same time.
 Install directly from a tagged release:
 
 ```bash
-pip install "git+https://github.com/jimmyken793/currency-exchangerate-host-plugin.git@v0.1.0"
+pip install "git+https://github.com/jimmyken793/currency-exchangerate-host-plugin.git@v0.2.0"
 ```
 
 For the custom InvenTree container:
 
 ```dockerfile
-FROM inventree/inventree:1.1.11
+FROM inventree/inventree:1.3.6
 
 RUN pip install \
-  "git+https://github.com/jimmyken793/currency-exchangerate-host-plugin.git@v0.1.0"
+  "git+https://github.com/jimmyken793/currency-exchangerate-host-plugin.git@v0.2.0"
 ```
 
 If the repository is private during image builds, vendor the plugin into the build
 context instead:
 
 ```dockerfile
-FROM inventree/inventree:1.1.11
+FROM inventree/inventree:1.3.6
 
 COPY inventree-currency-exchangerate-host-plugin /tmp/plugin
 RUN pip install /tmp/plugin && rm -rf /tmp/plugin
@@ -57,19 +57,27 @@ hyphen. Keep both values as-is for compatibility.
 Plugin settings:
 
 ```text
-API_TOKEN = <exchangerate.host access token>
+API_TOKEN = deprecated / unused
 ```
 
-For the current migration, do not place the token in this repository, the
-Dockerfile, or the Compose YAML. InvenTree stores plugin settings in the
-database; restoring the production SQLite database into the replica should
-carry this value across automatically.
-
-For a fresh database, set the token from the InvenTree admin plugin settings
-page after the plugin is installed and activated.
+Version `0.2.0` uses the Frankfurter v2 API, which does not require an API key.
+The `API_TOKEN` setting is intentionally retained so existing InvenTree databases
+can keep their historical plugin settings without migration. It is not read by
+the plugin.
 
 The current production InvenTree instance uses `TWD` as the currency code. `NTD`
 is not a standard currency code in `py-moneyed` and is not used in the database.
+
+## Provider
+
+The plugin calls:
+
+```text
+https://api.frankfurter.dev/v2/rates?base=<BASE>&quotes=<CODES>
+```
+
+Frankfurter v2 includes `TWD`, while the InvenTree 1.3.6 built-in currency
+exchange plugin still calls the Frankfurter v1-compatible `latest` endpoint.
 
 ## License And Origin
 

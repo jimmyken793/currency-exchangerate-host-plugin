@@ -1,4 +1,4 @@
-"""Fetch exchange rates from exchangerate.host.
+"""Fetch exchange rates from Frankfurter v2.
 
 This plugin is derived from InvenTree's built-in currency exchange plugin,
 which is distributed under the MIT license.
@@ -17,13 +17,13 @@ logger = logging.getLogger("inventree")
 class CurrencyexchangerateatehostPlugin(
     APICallMixin, CurrencyExchangeMixin, SettingsMixin, InvenTreePlugin
 ):
-    """Currency exchange plugin backed by exchangerate.host."""
+    """Currency exchange plugin backed by Frankfurter v2."""
 
-    TITLE = "Currency Exchange Rate Host Plugin"
+    TITLE = "Frankfurter v2 Currency Exchange Plugin"
     NAME = "CurrencyexchangerateatehostPlugin"
     # Keep this slug for compatibility with the existing InvenTree database.
     SLUG = "currency-exchangerateate--host-plugin"
-    DESCRIPTION = "Fetch exchange rate from exchangerate.host"
+    DESCRIPTION = "Fetch exchange rates from Frankfurter v2"
     VERSION = PLUGIN_VERSION
 
     AUTHOR = "Jimmy Cheng"
@@ -32,8 +32,8 @@ class CurrencyexchangerateatehostPlugin(
 
     SETTINGS = {
         "API_TOKEN": {
-            "name": "API token",
-            "description": "API token to access exchangerate.host",
+            "name": "API token (deprecated)",
+            "description": "Deprecated and unused. Frankfurter v2 does not require an API token.",
             "default": "",
             "protected": True,
         }
@@ -41,31 +41,40 @@ class CurrencyexchangerateatehostPlugin(
 
     def update_exchange_rates(self, base_currency: str, symbols: list[str]) -> dict:
         """Request exchange rate data from external API."""
-        token = self.get_setting("API_TOKEN")
-
-        if not token:
-            logger.error("No API token provided for %s", self.NAME)
-            return {}
-
         response = self.api_call(
-            "live",
-            url_args={"access_key": token, "source": [base_currency]},
+            "rates",
+            url_args={"base": base_currency, "quotes": symbols},
             simple_response=False,
         )
 
         if response.status_code == 200:
-            success = response.json().get("success", False)
-            if success:
-                raw_rates = response.json().get("quotes", {})
-                rates = {}
+            payload = response.json()
+            rates = {base_currency: 1.00}
 
-                # exchangerate.host returns quote keys such as "USDTWD".
-                for key, value in raw_rates.items():
-                    if key.startswith(base_currency):
-                        rates[key[len(base_currency) :]] = value
+            if isinstance(payload, list):
+                for item in payload:
+                    quote = item.get("quote")
+                    rate = item.get("rate")
 
-                rates[base_currency] = 1.00
+                    if quote and rate is not None:
+                        rates[quote] = rate
+
+                missing_symbols = set(symbols) - set(rates)
+
+                if missing_symbols:
+                    logger.warning(
+                        "Frankfurter v2 did not return exchange rates for: %s",
+                        ", ".join(sorted(missing_symbols)),
+                    )
+
                 return rates
+
+            logger.warning(
+                "Invalid exchange rate data returned from %s: expected list, got %s",
+                self.api_url,
+                type(payload),
+            )
+            return {}
 
         logger.warning(
             "Failed to update exchange rates from %s: Server returned status %s",
@@ -77,4 +86,4 @@ class CurrencyexchangerateatehostPlugin(
     @property
     def api_url(self):
         """Return the API URL for this plugin."""
-        return "http://api.exchangerate.host"
+        return "https://api.frankfurter.dev/v2"

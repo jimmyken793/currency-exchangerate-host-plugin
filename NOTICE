@@ -10,7 +10,10 @@ InvenTree is distributed under the MIT License:
 
 Local modifications:
 
-  Copyright (c) 2025 Jimmy Cheng <jimmy@kingyoung.com.tw>
+  Copyright (c) 2025-2026 Jimmy Cheng <jimmy@kingyoung.com.tw>
 
 The historical package name and plugin slug intentionally retain their original
 spelling to preserve compatibility with an existing InvenTree database.
+
+Version 0.2.0 changes the exchange-rate provider implementation to Frankfurter
+v2 while keeping the historical package and plugin identifiers.
